@@ -1,36 +1,105 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ChevronDown, ArrowUp, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import SmoothScrollProvider, { useLenis } from "../../components/SmoothScrollProvider";
+import SingleScrubVideo from "../../components/SingleScrubVideo";
 
 export default function FortEnergyPage() {
   const containerRef = useRef<HTMLDivElement>(null);
 
+  return (
+    <SmoothScrollProvider>
+      <FortEnergyContent containerRef={containerRef} />
+    </SmoothScrollProvider>
+  );
+}
+
+function FortEnergyContent({
+  containerRef,
+}: {
+  containerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const { scrollTo } = useLenis();
+
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (scrollTo) {
+      scrollTo(0, { duration: 1.2 });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
+
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+    const container = containerRef.current;
+    if (!container) return;
+
+    const ctx = gsap.context(() => {
+      const sections = container.querySelectorAll("section");
+      sections.forEach((sec) => {
+        const title = sec.querySelector("h1, h2, h3");
+        const paragraphs = sec.querySelectorAll("p");
+        const elements = sec.querySelectorAll(".cinematic-reveal, .card-stagger");
+
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: sec,
+            start: "top 78%",
+            end: "bottom 20%",
+            toggleActions: "play reverse play reverse",
+          },
+        });
+
+        if (title) {
+          tl.fromTo(
+            title,
+            { opacity: 0, y: 35 },
+            { opacity: 1, y: 0, duration: 1.05, ease: "power3.out" }
+          );
+        }
+
+        if (paragraphs.length > 0) {
+          tl.fromTo(
+            paragraphs,
+            { opacity: 0, y: 22 },
+            { opacity: 1, y: 0, duration: 0.9, stagger: 0.12, ease: "power2.out" },
+            "-=0.7"
+          );
+        }
+
+        if (elements.length > 0) {
+          tl.fromTo(
+            elements,
+            { opacity: 0, y: 20 },
+            { opacity: 1, y: 0, duration: 0.8, stagger: 0.1, ease: "power2.out" },
+            "-=0.6"
+          );
+        }
+      });
+    }, container);
+
+    return () => ctx.revert();
+  }, [containerRef]);
 
   return (
     <div
       ref={containerRef}
       className="relative w-full bg-[#020912] text-white selection:bg-[#0072b2] selection:text-white"
     >
-      {/* Background Single Video Layer (Fixed) */}
-      <div className="fixed inset-0 z-0 h-screen w-full overflow-hidden pointer-events-none">
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="h-full w-full object-cover filter brightness-90"
-          src="/videos/fort-energy.mp4"
-        />
-
-        {/* Deep Cyber Vignette Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#020912]/50 via-transparent to-[#020912]/80" />
-      </div>
+      {/* Bidirectional Frame-Accurate Scrubbing Video */}
+      <SingleScrubVideo
+        videoSrc="/videos/fort-energy.mp4"
+        containerRef={containerRef}
+        fallbackDuration={12}
+        brightness={0.92}
+        contrast={1.08}
+        saturate={0.95}
+        overlayGradient="from-[#020912]/55 via-transparent to-[#020912]/85"
+      />
 
       {/* Floating Action Controls (Right Bottom) */}
       <div className="fixed bottom-10 right-8 z-40 flex flex-col items-center gap-3">
@@ -49,8 +118,8 @@ export default function FortEnergyPage() {
       {/* Scroll Sections Container */}
       <div className="relative z-10">
         {/* Section 1: Hero (Fort Energy Center Layout) */}
-        <ScrollSection className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center">
-          <div className="flex flex-col items-center">
+        <section className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center">
+          <div className="cinematic-reveal flex flex-col items-center">
             {/* Logo, Divider Line & Title */}
             <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
               {/* Fort Energy Dot-Shield Logo */}
@@ -91,11 +160,11 @@ export default function FortEnergyPage() {
             </span>
             <div className="h-5 w-[1px] bg-sky-400/60 animate-bounce" />
           </div>
-        </ScrollSection>
+        </section>
 
         {/* Section 2: Advancing Innovation In Energy Investments */}
-        <ScrollSection className="min-h-screen px-8 md:px-20 lg:px-32 flex flex-col justify-center">
-          <div className="max-w-[1500px] mx-auto w-full">
+        <section className="min-h-screen px-8 md:px-20 lg:px-32 flex flex-col justify-center">
+          <div className="cinematic-reveal max-w-[1500px] mx-auto w-full">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-wide uppercase leading-tight mb-28 max-w-3xl text-white drop-shadow">
               ADVANCING INNOVATION IN ENERGY INVESTMENTS
             </h2>
@@ -108,11 +177,11 @@ export default function FortEnergyPage() {
               </p>
             </div>
           </div>
-        </ScrollSection>
+        </section>
 
         {/* Section 3: The Fort Energy Advantage & Refinery Industrial Units */}
-        <ScrollSection className="min-h-screen px-8 md:px-20 lg:px-32 flex flex-col justify-center">
-          <div className="max-w-[1500px] mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-14 items-start relative">
+        <section className="min-h-screen px-8 md:px-20 lg:px-32 flex flex-col justify-center">
+          <div className="cinematic-reveal max-w-[1500px] mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-14 items-start relative">
             {/* Left Block */}
             <div className="flex flex-col">
               <div className="mb-6 inline-flex h-10 w-10 items-center justify-center border border-sky-400/40 rotate-45 bg-[#020912]/50 backdrop-blur-sm">
@@ -153,11 +222,11 @@ export default function FortEnergyPage() {
               </p>
             </div>
           </div>
-        </ScrollSection>
+        </section>
 
         {/* Section 4: Empowering Communities & Preferential Market Access */}
-        <ScrollSection className="min-h-screen px-8 md:px-20 lg:px-32 flex flex-col justify-center">
-          <div className="max-w-[1500px] mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-20">
+        <section className="min-h-screen px-8 md:px-20 lg:px-32 flex flex-col justify-center">
+          <div className="cinematic-reveal max-w-[1500px] mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-20">
             {/* Column 1 */}
             <div className="flex flex-col justify-center">
               <div className="max-w-md">
@@ -186,11 +255,11 @@ export default function FortEnergyPage() {
               </div>
             </div>
           </div>
-        </ScrollSection>
+        </section>
 
         {/* Section 5: Corporate Governance & Website CTA */}
-        <ScrollSection className="min-h-screen px-8 md:px-20 lg:px-32 flex flex-col justify-center">
-          <div className="max-w-[1400px] mx-auto w-full flex flex-col items-center text-center">
+        <section className="min-h-screen px-8 md:px-20 lg:px-32 flex flex-col justify-center">
+          <div className="cinematic-reveal max-w-[1400px] mx-auto w-full flex flex-col items-center text-center">
             <h2 className="text-3xl sm:text-4xl font-light tracking-wide text-white mb-6 drop-shadow">
               Corporate governance and global compliance
             </h2>
@@ -214,34 +283,8 @@ export default function FortEnergyPage() {
               <div className="h-[1px] w-56 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
             </div>
           </div>
-        </ScrollSection>
+        </section>
       </div>
     </div>
-  );
-}
-
-// Scroll Reveal Animation Component
-function ScrollSection({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "center center"],
-  });
-
-  const opacity = useTransform(scrollYProgress, [0, 0.8], [0, 1]);
-  const y = useTransform(scrollYProgress, [0, 0.8], [50, 0]);
-
-  return (
-    <section ref={ref} className={className}>
-      <motion.div style={{ opacity, y }} className="w-full">
-        {children}
-      </motion.div>
-    </section>
   );
 }

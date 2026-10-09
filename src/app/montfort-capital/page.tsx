@@ -1,35 +1,104 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ChevronDown, ArrowUp } from "lucide-react";
+import SmoothScrollProvider, { useLenis } from "../../components/SmoothScrollProvider";
+import SingleScrubVideo from "../../components/SingleScrubVideo";
 
 export default function MontfortCapitalPage() {
   const containerRef = useRef<HTMLDivElement>(null);
 
+  return (
+    <SmoothScrollProvider>
+      <MontfortCapitalContent containerRef={containerRef} />
+    </SmoothScrollProvider>
+  );
+}
+
+function MontfortCapitalContent({
+  containerRef,
+}: {
+  containerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const { scrollTo } = useLenis();
+
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (scrollTo) {
+      scrollTo(0, { duration: 1.2 });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
+
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+    const container = containerRef.current;
+    if (!container) return;
+
+    const ctx = gsap.context(() => {
+      const sections = container.querySelectorAll("section");
+      sections.forEach((sec) => {
+        const title = sec.querySelector("h1, h2, h3");
+        const paragraphs = sec.querySelectorAll("p");
+        const elements = sec.querySelectorAll(".cinematic-reveal");
+
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: sec,
+            start: "top 78%",
+            end: "bottom 20%",
+            toggleActions: "play reverse play reverse",
+          },
+        });
+
+        if (title) {
+          tl.fromTo(
+            title,
+            { opacity: 0, y: 35 },
+            { opacity: 1, y: 0, duration: 1.05, ease: "power3.out" }
+          );
+        }
+
+        if (paragraphs.length > 0) {
+          tl.fromTo(
+            paragraphs,
+            { opacity: 0, y: 22 },
+            { opacity: 1, y: 0, duration: 0.9, stagger: 0.12, ease: "power2.out" },
+            "-=0.7"
+          );
+        }
+
+        if (elements.length > 0) {
+          tl.fromTo(
+            elements,
+            { opacity: 0, y: 20 },
+            { opacity: 1, y: 0, duration: 0.8, stagger: 0.1, ease: "power2.out" },
+            "-=0.6"
+          );
+        }
+      });
+    }, container);
+
+    return () => ctx.revert();
+  }, [containerRef]);
 
   return (
     <div
       ref={containerRef}
       className="relative w-full bg-[#0a150c] text-white selection:bg-[#4a7c59] selection:text-white"
     >
-      {/* Background Single Video Layer */}
-      <div className="fixed inset-0 z-0 h-screen w-full overflow-hidden pointer-events-none">
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="h-full w-full object-cover filter brightness-90"
-          src="/videos/capital-grass.mp4"
-        />
-
-        {/* Soft Dark Vignette Overlay for Readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50" />
-      </div>
+      {/* Bidirectional Frame-Accurate Scrubbing Video */}
+      <SingleScrubVideo
+        videoSrc="/videos/capital-grass.mp4"
+        containerRef={containerRef}
+        fallbackDuration={14}
+        brightness={0.92}
+        contrast={1.06}
+        saturate={0.92}
+        overlayGradient="from-black/35 via-transparent to-black/60"
+      />
 
       {/* Floating Action Buttons (Right Bottom) */}
       <div className="fixed bottom-10 right-8 z-40 flex flex-col items-center gap-3">
@@ -48,8 +117,8 @@ export default function MontfortCapitalPage() {
       {/* Scroll Sections Container */}
       <div className="relative z-10">
         {/* Section 1: Hero (Perfect Center Layout) */}
-        <ScrollSection className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center">
-          <div className="flex flex-col items-center">
+        <section className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center">
+          <div className="cinematic-reveal flex flex-col items-center">
             {/* Logo, Line, and Title Centered */}
             <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-7">
               {/* Shield Icon */}
@@ -87,21 +156,21 @@ export default function MontfortCapitalPage() {
             </span>
             <div className="h-6 w-[1px] bg-gradient-to-b from-white/70 to-transparent animate-pulse" />
           </div>
-        </ScrollSection>
+        </section>
 
         {/* Section 2: Big Headline (Fund Management Company) */}
-        <ScrollSection className="min-h-screen px-8 md:px-20 lg:px-32 flex flex-col justify-center">
-          <div className="max-w-[1400px] mx-auto w-full">
+        <section className="min-h-screen px-8 md:px-20 lg:px-32 flex flex-col justify-center">
+          <div className="cinematic-reveal max-w-[1400px] mx-auto w-full">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-wide uppercase leading-snug text-white max-w-4xl drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
               MONTFORT CAPITAL IS A NEWLY FOUNDED FUND MANAGEMENT COMPANY, BUILT
               ON THE EXPERTISE OF A GLOBAL LEADER IN COMMODITY TRADING.
             </h2>
           </div>
-        </ScrollSection>
+        </section>
 
         {/* Section 3: Right Aligned Trader's Perspective */}
-        <ScrollSection className="min-h-screen px-8 md:px-20 lg:px-32 flex flex-col justify-center">
-          <div className="max-w-[1400px] mx-auto w-full flex justify-end">
+        <section className="min-h-screen px-8 md:px-20 lg:px-32 flex flex-col justify-center">
+          <div className="cinematic-reveal max-w-[1400px] mx-auto w-full flex justify-end">
             <p className="max-w-xl text-lg md:text-xl font-light leading-relaxed text-white/90 drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
               With strong foundations in the trading world, we offer a distinct
               approach to investments in the energy and shipping sectors,
@@ -109,11 +178,11 @@ export default function MontfortCapitalPage() {
               opportunities that maximize value for our investors.
             </p>
           </div>
-        </ScrollSection>
+        </section>
 
         {/* Section 4: Dual Columns (Sharp Insights & Advantage) */}
-        <ScrollSection className="min-h-screen px-8 md:px-20 lg:px-32 flex flex-col justify-center">
-          <div className="max-w-[1500px] mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-28">
+        <section className="min-h-screen px-8 md:px-20 lg:px-32 flex flex-col justify-center">
+          <div className="cinematic-reveal max-w-[1500px] mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-28">
             {/* Left Block */}
             <div className="flex flex-col justify-center">
               <p className="max-w-md text-base md:text-lg font-light leading-relaxed text-white/90 drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
@@ -139,34 +208,8 @@ export default function MontfortCapitalPage() {
               </p>
             </div>
           </div>
-        </ScrollSection>
+        </section>
       </div>
     </div>
-  );
-}
-
-// Scroll Reveal Animation Component
-function ScrollSection({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "center center"],
-  });
-
-  const opacity = useTransform(scrollYProgress, [0, 0.8], [0, 1]);
-  const y = useTransform(scrollYProgress, [0, 0.8], [50, 0]);
-
-  return (
-    <section ref={ref} className={className}>
-      <motion.div style={{ opacity, y }} className="w-full">
-        {children}
-      </motion.div>
-    </section>
   );
 }

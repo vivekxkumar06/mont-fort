@@ -1,8 +1,14 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowUp, ChevronDown } from "lucide-react";
+import SmoothScrollProvider, {
+  useLenis,
+} from "../../components/SmoothScrollProvider";
 
 interface NewsItem {
   id: string;
@@ -199,25 +205,69 @@ const newsList: NewsItem[] = [
 ];
 
 export default function NewsPage() {
+  return (
+    <SmoothScrollProvider>
+      <NewsContent />
+    </SmoothScrollProvider>
+  );
+}
+
+function NewsContent() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollTo } = useLenis();
+
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (scrollTo) {
+      scrollTo(0, { duration: 1.2 });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+    const container = containerRef.current;
+    if (!container) return;
+
+    const ctx = gsap.context(() => {
+      const articles = container.querySelectorAll(".news-article-card");
+      articles.forEach((el) => {
+        gsap.fromTo(
+          el,
+          { opacity: 0, y: 30, scale: 0.98 },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.85,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: el,
+              start: "top 88%",
+              toggleActions: "play none none none",
+            },
+          },
+        );
+      });
+    }, container);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[#fafbfc] text-[#1c2e3d] antialiased">
+    <div
+      ref={containerRef}
+      className="min-h-screen bg-[#fafbfc] text-[#1c2e3d] antialiased"
+    >
       {/* Main Content Area */}
       <main className="mx-auto max-w-[1700px] px-8 pt-36 pb-28 md:px-16 lg:pt-44 lg:px-24">
-        {/* Page Title */}
-        <div className="mb-14 md:mb-20">
-          {/* <h1 className="text-4xl font-light uppercase tracking-[0.08em] text-[#2f5f8a] md:text-5xl lg:text-6xl">
-            News
-          </h1> */}
-        </div>
-
         {/* 3-Column Grid */}
-        <div className="grid grid-cols-1 gap-x-10 gap-y-16 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-x-10 gap-y-16 md:grid-cols-2 lg:grid-cols-3 mt-8 md:mt-12">
           {newsList.map((item) => (
-            <article key={item.id} className="group flex flex-col">
+            <article
+              key={item.id}
+              className="news-article-card group flex flex-col"
+            >
               <Link href={item.href} className="block overflow-hidden">
                 {/* Image Container with 16:9 Aspect Ratio */}
                 <div className="relative aspect-[16/9.5] w-full overflow-hidden rounded-[14px] bg-[#e6edf2] transition-transform duration-700 ease-out group-hover:scale-[1.02]">
