@@ -253,7 +253,9 @@ export default function SingleScrubVideo({
         ref={videoRef}
         muted
         playsInline
-        preload="metadata"
+        preload="auto"
+        onLoadedMetadata={() => setIsReady(true)}
+        onLoadedData={() => setIsReady(true)}
         onCanPlay={() => {
           setIsReady(true);
           if (videoRef.current && videoRef.current.currentTime === 0) {
@@ -262,10 +264,14 @@ export default function SingleScrubVideo({
             } catch {}
           }
         }}
+        onError={(e) => {
+          console.warn("[SingleScrubVideo] Video load warning/error:", videoSrc, e);
+          setIsReady(true); // Don't keep screen hidden if browser restricts pre-decoding
+        }}
         className="absolute inset-0 h-full w-full object-cover will-change-transform"
         style={{
-          opacity: isReady ? 1 : 0,
-          transition: "opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
+          opacity: isReady ? 1 : 0.85,
+          transition: "opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
           filter: `brightness(${brightness}) contrast(${contrast}) saturate(${saturate})`,
         }}
         src={videoSrc}
