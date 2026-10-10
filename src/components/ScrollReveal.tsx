@@ -25,18 +25,18 @@ interface ScrollRevealProps {
 export default function ScrollReveal({
   children,
   direction = "up",
-  distance = 35,
-  duration = 1.1,
+  distance = 30,
+  duration = 1.0,
   delay = 0,
   stagger = 0,
   scale = 1,
   opacity = 0,
   ease = "power3.out",
-  start = "top 85%",
+  start = "top 82%",
   end = "bottom 20%",
   scrub = false,
   className = "",
-  once = true,
+  once = false,
 }: ScrollRevealProps) {
   const elementRef = useRef<HTMLDivElement>(null);
 
@@ -44,6 +44,16 @@ export default function ScrollReveal({
     gsap.registerPlugin(ScrollTrigger);
     const el = elementRef.current;
     if (!el) return;
+
+    // Respect user's motion preferences
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReducedMotion) {
+      gsap.set(el, { opacity: 1, x: 0, y: 0, scale: 1 });
+      return;
+    }
 
     let x = 0;
     let y = 0;

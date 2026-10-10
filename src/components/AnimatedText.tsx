@@ -39,6 +39,15 @@ export default function AnimatedText({
     const items = container.querySelectorAll(".animated-text-item");
     if (!items.length) return;
 
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReducedMotion) {
+      gsap.set(items, { y: "0%", opacity: 1, scale: 1 });
+      return;
+    }
+
     const ctx = gsap.context(() => {
       gsap.fromTo(
         items,
