@@ -198,6 +198,24 @@ export default function SingleScrubVideo({
       video.pause();
     } catch {}
 
+    const primeFirstFrame = () => {
+      setIsReady(true);
+      if (video && video.currentTime === 0) {
+        try {
+          video.currentTime = 0.001;
+        } catch {}
+      }
+    };
+
+    // If metadata already loaded (e.g. from cache or SSR hydration)
+    if (video.readyState >= 1) {
+      primeFirstFrame();
+    }
+
+    video.addEventListener("loadedmetadata", primeFirstFrame);
+    video.addEventListener("loadeddata", primeFirstFrame);
+    video.addEventListener("canplay", primeFirstFrame);
+
     const scrubber = new VideoScrubController(video, fallbackDuration);
 
     const ctx = gsap.context(() => {
@@ -242,6 +260,9 @@ export default function SingleScrubVideo({
     ScrollTrigger.refresh();
 
     return () => {
+      video.removeEventListener("loadedmetadata", primeFirstFrame);
+      video.removeEventListener("loadeddata", primeFirstFrame);
+      video.removeEventListener("canplay", primeFirstFrame);
       ctx.revert();
       scrubber.destroy();
     };
